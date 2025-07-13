@@ -31,6 +31,7 @@ export class BoardRepository {
         }
 
         try{
+            this.fastify.log.info(`실행 쿼리: ${this.db.format(query, queryParams)}`);
             const [rows] = await this.db.query<RowDataPacket[]>(query, queryParams);
             return rows[0].totalCount;
         }catch(error){
@@ -81,6 +82,7 @@ export class BoardRepository {
         queryParams.push(limit, offset);
 
         try {
+            this.fastify.log.info(`실행 쿼리: ${this.db.format(query, queryParams)}`);
             const [rows] = await this.db.query<RowDataPacket[]>(query, queryParams);
             return rows;
         } catch (error) {
@@ -109,6 +111,7 @@ export class BoardRepository {
         `
 
         try{
+            this.fastify.log.info(`실행 쿼리: ${this.db.format(query, [id])}`);
             const [rows] = await this.db.query<RowDataPacket[]>(query, [id]);
             return rows[0];
         }catch(error){
@@ -142,6 +145,7 @@ export class BoardRepository {
         `
 
         try{
+            this.fastify.log.info(`실행 쿼리: ${this.db.format(query, [title, content, writer, password])}`);
             const [result] = await this.db.query<ResultSetHeader>(query, [title, content, writer, password]);
             return result.insertId;
         }catch(error){
@@ -166,6 +170,7 @@ export class BoardRepository {
         `
 
         try{
+            this.fastify.log.info(`실행 쿼리: ${this.db.format(query, [password, id])}`);
             const [rows] = await this.db.query<RowDataPacket[]>(query, [password, id]);
             return rows[0].isPasswordCorrect;
         }catch(error){
@@ -185,6 +190,7 @@ export class BoardRepository {
         `
 
         try{
+            this.fastify.log.info(`실행 쿼리: ${this.db.format(query, [id])}`);
             const [result] = await this.db.query<ResultSetHeader>(query, [id]);
             return result.affectedRows;
         }catch(error){
@@ -211,6 +217,7 @@ export class BoardRepository {
         `
 
         try{
+            this.fastify.log.info(`실행 쿼리: ${this.db.format(query, [title, title, content, id])}`);
             const [result] = await this.db.query<ResultSetHeader>(query, [title, title, content, id]);
             return result.affectedRows;
         }catch(error){
