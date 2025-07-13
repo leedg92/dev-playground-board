@@ -16,11 +16,11 @@ export class BoardRepository {
      * @returns 게시판 총 개수
      */
     async getTotalCount(){
-        const query = `SELECT COUNT(*) AS TOTAL_COUNT FROM ${this.tableName}`;
+        const query = `SELECT COUNT(*) AS totalCount FROM ${this.tableName}`;
 
         try{
             const [rows] = await this.db.query<RowDataPacket[]>(query);
-            return rows[0].TOTAL_COUNT;
+            return rows[0].totalCount;
         }catch(error){
             this.fastify.logDbError('board', 'board', '게시판 총 개수 조회 실패', error);
             throw error;
@@ -36,14 +36,14 @@ export class BoardRepository {
     async getList(pageNum: number = 1, rowsPerPage: number = 10): Promise<RowDataPacket[]> {
         const query = `
             SELECT 
-                ID,
-                TITLE,
-                WRITER,
-                CREATED_AT,
-                UPDATED_AT
+                id,
+                title,
+                writer,
+                created_at as createdAt,
+                updated_at as updatedAt
             FROM 
                 ${this.tableName}
-            ORDER BY ID DESC
+            ORDER BY id DESC
             LIMIT ?
             OFFSET ?
         `;
@@ -69,15 +69,15 @@ export class BoardRepository {
     async getDetail(id: number){
         const query = `
             SELECT 
-                ID,
-                TITLE,
-                CONTENT,
-                WRITER,
-                CREATED_AT,
-                UPDATED_AT
+                id,
+                title,
+                content,
+                writer,
+                created_at as createdAt,
+                updated_at as updatedAt
             FROM 
                 ${this.tableName} 
-            WHERE ID = ?
+            WHERE id = ?
         `
 
         try{
@@ -93,10 +93,10 @@ export class BoardRepository {
         const query = `
             INSERT INTO ${this.tableName} 
             (
-                TITLE,
-                CONTENT,
-                WRITER,
-                PASSWORD
+                title,
+                content,
+                writer,
+                password
             ) VALUES (
                 ?,
                 ?,
@@ -114,18 +114,18 @@ export class BoardRepository {
         }
     }
 
-    async checkBeforDeleteBoard(id: number, password: string){
+    async checkBoardPassword(id: number, password: string){
         const query = `
             SELECT 
-                PASSWORD = ${this.algorithm}(?,${this.method}) AS IS_PASSWORD_CORRECT
+                password = ${this.algorithm}(?,${this.method}) AS isPasswordCorrect
             FROM 
                 ${this.tableName}
-            WHERE ID = ?
+            WHERE id = ?
         `
 
         try{
             const [rows] = await this.db.query<RowDataPacket[]>(query, [password, id]);
-            return rows[0].IS_PASSWORD_CORRECT;
+            return rows[0].isPasswordCorrect;
         }catch(error){
             this.fastify.logDbError('board', 'board', '게시판 삭제 전 비밀번호 확인 실패', error);
             throw error;
@@ -134,7 +134,7 @@ export class BoardRepository {
 
     async deleteBoard(id: number){
         const query = `
-            DELETE FROM ${this.tableName} WHERE ID = ?
+            DELETE FROM ${this.tableName} WHERE id = ?
         `
 
         try{
@@ -150,14 +150,14 @@ export class BoardRepository {
         const query = `
             UPDATE ${this.tableName}
             SET
-                TITLE = CONCAT('[수정됨] ',?),
-                CONTENT = ?,
-                UPDATED_AT = NOW()
-            WHERE ID = ?
+                title = IF(title LIKE '[수정됨]%', ?, CONCAT('[수정됨] ', ?)),
+                content = ?,
+                updated_at = NOW()
+            WHERE id = ?
         `
 
         try{
-            const [result] = await this.db.query<ResultSetHeader>(query, [title, content, id]);
+            const [result] = await this.db.query<ResultSetHeader>(query, [title, title, content, id]);
             return result.affectedRows;
         }catch(error){
             this.fastify.logDbError('board', 'board', '게시판 수정 실패', error);

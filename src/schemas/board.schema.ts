@@ -92,6 +92,28 @@ export const insertSchema = {
     }
 }
 
+export const checkPasswordSchema = {
+    summary : '게시판 비밀번호 확인',
+    description : '- 게시판 비밀번호를 확인합니다.',
+    tags : ['Board'],
+    body : {
+        type : 'object',
+        required : ['id', 'password'],
+        properties : {
+            id : {type : 'number'},
+            password : {type : 'string'}
+        }
+    },
+    response : {
+        200 : {
+            type : 'object',
+            properties : {
+                result : {type : 'boolean'}
+            }
+        }
+    }
+}
+
 export const deleteSchema = {
     summary : '게시판 삭제',
     description : '- 게시판을 삭제합니다.',

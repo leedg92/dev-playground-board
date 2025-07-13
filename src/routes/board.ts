@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
-import { listSchema, detailSchema, insertSchema, deleteSchema, updateSchema } from '../schemas/board.schema.js';
+import { listSchema, detailSchema, insertSchema, deleteSchema, updateSchema, checkPasswordSchema } from '../schemas/board.schema.js';
 /**
  * 메모리 모니터링 데이터 조회
  */
@@ -33,6 +33,14 @@ const BoardRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
         const result = await fastify.services.boardService.insertBoard(title, content, writer, password);
         return reply.status(result.statusCode).send(result);
     })
+
+    fastify.post('/checkPassword',{
+        schema : checkPasswordSchema,
+    }, async (request, reply) => {
+        const {id, password} = request.body as {id: number, password: string};
+        const result = await fastify.services.boardService.checkBoardPassword(id, password);
+        return reply.status(result.statusCode).send(result);
+    })  
 
     fastify.post('/delete',{
         schema : deleteSchema,

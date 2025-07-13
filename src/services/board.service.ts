@@ -41,40 +41,35 @@ export class BoardService {
     }
 
     async checkBoardPassword(id: number, password: string){
-        const result = await this.boardRepository.checkBeforDeleteBoard(id, password);
-        return result;
-    }
-
-    async deleteBoard(id: number, password: string){
-        const isPasswordCorrect = await this.checkBoardPassword(id, password);
-        if(!isPasswordCorrect){
+        const result = await this.boardRepository.checkBoardPassword(id, password);
+        if(!result){
             return {
                 statusCode : 422,
                 error : 'INVALID_PASSWORD'
             }
         }else{
-            const result = await this.boardRepository.deleteBoard(id);
             return {
                 statusCode : 200,
                 result : result
             }
+        }
+    }
+
+    async deleteBoard(id: number, password: string){
+        const result = await this.boardRepository.deleteBoard(id);
+        return {
+            statusCode : 200,
+           result : result
         }
     }
 
     async updateBoard(id: number, title: string, content: string, password: string){
-        const isPasswordCorrect = await this.checkBoardPassword(id, password);
-        if(!isPasswordCorrect){
-            return {
-                statusCode : 422,
-                error : 'INVALID_PASSWORD'
-            }
-        }else{
-            const result = await this.boardRepository.updateBoard(id, title, content);
-            return {
-                statusCode : 200,
-                result : result
-            }
+        const result = await this.boardRepository.updateBoard(id, title, content);
+        return {
+            statusCode : 200,
+            result : result
         }
+        
     }
 }
 
