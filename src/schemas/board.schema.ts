@@ -8,6 +8,7 @@ export const listSchema = {
         properties: {
             pageNum : { type: 'number' },
             rowsPerPage : { type: 'number' },
+            search : { type: 'string', nullable: true }
         }
     },
     response: {
@@ -29,6 +30,41 @@ export const listSchema = {
             type: 'object',
             properties: {
                 error: { type: 'string' },
+            }
+        }
+    }
+}
+
+export const searchSchema = {
+    summary : '게시판 검색 조회',
+    description : '- 게시판을 검색합니다.',
+    tags : ['Board'],
+    body : {
+        type : 'object',
+        required : ['search', 'pageNum', 'rowsPerPage'],
+        properties : {
+            search : {type : 'string'},
+            pageNum : {type : 'number'},
+            rowsPerPage : {type : 'number'}
+        }
+    },
+    response : {
+        200 : {
+            type : 'object',
+            properties : {
+                result : {type : 'array', items : {type : 'object', additionalProperties : true}}
+            }
+        },
+        422 : {
+            type : 'object',
+            properties : {
+                error : {type : 'string'}
+            }
+        },
+        500 : {
+            type : 'object',
+            properties : {
+                error : {type : 'string'}
             }
         }
     }

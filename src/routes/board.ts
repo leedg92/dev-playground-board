@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
-import { listSchema, detailSchema, insertSchema, deleteSchema, updateSchema, checkPasswordSchema } from '../schemas/board.schema.js';
+import { listSchema, detailSchema, insertSchema, deleteSchema, updateSchema, checkPasswordSchema, searchSchema } from '../schemas/board.schema.js';
 /**
  * 메모리 모니터링 데이터 조회
  */
@@ -8,15 +8,16 @@ const BoardRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
         schema: listSchema,
 
     }, async (request, reply) => {
-        const { pageNum, rowsPerPage } = request.body as { pageNum: number; rowsPerPage: number };
-        const totalCount = await fastify.services.boardService.getTotalCount();
-        const result = await fastify.services.boardService.getList(pageNum, rowsPerPage);
+        const { pageNum, rowsPerPage, search = '' } = request.body as { pageNum: number; rowsPerPage: number; search: string };
+        const totalCount = await fastify.services.boardService.getTotalCount(search);
+        const result = await fastify.services.boardService.getList(pageNum, rowsPerPage, search);
         return reply.status(200).send({
             result: result,
             totalCount : totalCount,
             totalPages : Math.ceil(totalCount / rowsPerPage)
         });
     });
+
 
     fastify.post('/detail',{
         schema: detailSchema,

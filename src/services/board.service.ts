@@ -7,13 +7,13 @@ export class BoardService {
         this.boardRepository = boardRepository;
     }
 
-    async getTotalCount(){
-        const result = await this.boardRepository.getTotalCount();
+    async getTotalCount(search: string = ''){
+        const result = await this.boardRepository.getTotalCount(search);
         return result;
     }
 
-    async getList(pageNum: number, rowsPerPage: number) {
-        const result = await this.boardRepository.getList(pageNum, rowsPerPage);
+    async getList(pageNum: number, rowsPerPage: number, search: string = '') {
+        const result = await this.boardRepository.getList(pageNum, rowsPerPage, search);
         return result;
     }
 
