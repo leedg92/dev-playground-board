@@ -1,0 +1,75 @@
+# Board Service
+# 비밀번호 기반 익명 게시판 서비스
+
+services:
+  mariadb:
+    container_name: board-service-db
+    image: mariadb:latest
+    restart: always
+    ports:
+      - '${DB_EXTERNAL_PORT}:3306'
+    volumes:
+      - board_service_db_data:/var/lib/mysql  
+      - ./db/mysqldata/initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - TZ=Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "/usr/bin/mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 120s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - board-service-network
+
+  api:
+    build: .
+    container_name: board-service-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT}:${PORT}"
+    volumes:
+      # 소스 코드 hot reload를 위한 볼륨 마운트
+      - ./src:/app/src:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      # node_modules는 컨테이너 내부 것 사용
+      - /app/node_modules
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - HOST=${HOST}
+      - API_PREFIX=${API_PREFIX}
+      - ENABLE_SWAGGER=${ENABLE_SWAGGER}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - ENABLE_REQUEST_LOGGING=${ENABLE_REQUEST_LOGGING}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+    command: >
+      sh -c "
+        if [ \"$${NODE_ENV}\" = \"development\" ]; then
+          npm run dev
+        else
+          npm run start
+        fi
+      "
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - board-service-network
+
+volumes:
+  board_service_db_data:
+    driver: local
+
+networks:
+  board-service-network:
+    driver: bridge 

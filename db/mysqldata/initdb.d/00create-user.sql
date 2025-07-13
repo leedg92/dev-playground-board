@@ -1,0 +1,6 @@
+CREATE USER 'board'@'%' IDENTIFIED BY "board123!";
+
+GRANT ALL PRIVILEGES ON *.* TO 'board'@'%';
+
+FLUSH PRIVILEGES;
+

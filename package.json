@@ -1,0 +1,53 @@
+{
+    "name": "board-service",
+    "version": "1.0.0",
+    "description": "Anonymous board service with password-based authentication - First microservice for toy project platform",
+    "main": "dist/app.js",
+    "type": "module",
+    "scripts": {
+        "dev": "tsx watch src/app.ts",
+        "dev:build": "tsc && node dist/app.js",
+        "build": "tsc",
+        "start": "node dist/app.js",
+        "lint": "eslint src/",
+        "test": "node --test",
+        "docker:build": "docker build -t board-service .",
+        "docker:run": "docker run -p 8000:8000 --env-file .env board-service",
+        "docker:dev": "docker run -p 8000:8000 -v $(pwd):/app --env-file .env board-service npm run dev"
+    },
+    "dependencies": {
+        "@fastify/autoload": "^6.0.1",
+        "@fastify/cors": "^10.0.1",
+        "@fastify/env": "^5.0.1",
+        "@fastify/helmet": "^12.0.1",
+        "@fastify/rate-limit": "^10.1.1",
+        "@fastify/swagger": "^9.1.0",
+        "@fastify/swagger-ui": "^5.0.1",
+        "bcrypt": "^5.1.1",
+        "close-with-grace": "^2.1.0",
+        "fastify": "^5.3.3",
+        "fastify-plugin": "^5.0.1",
+        "mysql2": "^3.14.1",
+        "pino-pretty": "^11.2.2"
+    },
+    "devDependencies": {
+        "@types/bcrypt": "^5.0.2",
+        "@types/node": "^22.15.24",
+        "eslint": "^9.15.0",
+        "ts-node": "^10.9.2",
+        "tsx": "^4.20.3",
+        "typescript": "^5.8.3"
+    },
+    "keywords": [
+        "board-service",
+        "anonymous-board",
+        "fastify",
+        "typescript",
+        "api",
+        "nodejs",
+        "docker",
+        "microservice"
+    ],
+    "author": "Simon",
+    "license": "MIT"
+}
