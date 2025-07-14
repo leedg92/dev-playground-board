@@ -1,11 +1,13 @@
 import { FastifyInstance } from "fastify";
 import { Pool, RowDataPacket, ResultSetHeader } from "mysql2/promise";
 import { RowDataSchema } from "../schemas/rowData.schema.js";
+import bcrypt from "bcrypt";
 
 export class BoardRepository {
     private readonly tableName = "board";
-    private readonly algorithm = process.env.ALGORITHM;
-    private readonly method = process.env.METHOD;
+    private readonly algorithm = process.env.ALGORITHM; // MySQL 해싱 함수
+    private readonly method = process.env.METHOD; // SHA2 bit 길이
+    private readonly saltRounds = process.env.SALT_ROUNDS; // bcrypt salt rounds
     private db: Pool;
     constructor(private readonly fastify: FastifyInstance) {
         this.db = fastify.boardDb;
@@ -129,6 +131,13 @@ export class BoardRepository {
      * @returns 게시판 등록 결과
      */
     async InsertBoard(title: string, content: string, writer: string, password: string){
+        // SHA2로 먼저 해싱한 후 bcrypt로 최종 해싱 (이중 보안)
+        const sha2Query = `SELECT ${this.algorithm}(?, ${this.method}) as sha2_hash`;
+        const [sha2Result] = await this.db.query<RowDataPacket[]>(sha2Query, [password]);
+        const sha2Hash = sha2Result[0].sha2_hash;
+        
+        const finalPassword = await bcrypt.hash(sha2Hash, Number(this.saltRounds));
+        
         const query = `
             INSERT INTO ${this.tableName} 
             (
@@ -140,13 +149,13 @@ export class BoardRepository {
                 ?,
                 ?,
                 ?,
-                ${this.algorithm}(?,${this.method})
+                ?
             )
         `
 
         try{
-            this.fastify.log.info(`실행 쿼리: ${this.db.format(query, [title, content, writer, password])}`);
-            const [result] = await this.db.query<ResultSetHeader>(query, [title, content, writer, password]);
+            this.fastify.log.info(`실행 쿼리: ${this.db.format(query, [title, content, writer, finalPassword])}`);
+            const [result] = await this.db.query<ResultSetHeader>(query, [title, content, writer, finalPassword]);
             return result.insertId;
         }catch(error){
             this.fastify.logDbError('board', 'board', '게시판 등록 실패', error);
@@ -161,20 +170,27 @@ export class BoardRepository {
      * @returns 게시판 비밀번호 확인 결과
      */
     async checkBoardPassword(id: number, password: string){
-        const query = `
-            SELECT 
-                password = ${this.algorithm}(?,${this.method}) AS isPasswordCorrect
-            FROM 
-                ${this.tableName}
-            WHERE id = ?
-        `
+        // 저장된 bcrypt 해시 가져오기
+        const getPasswordQuery = `SELECT password FROM ${this.tableName} WHERE id = ?`;
+        const [passwordRows] = await this.db.query<RowDataPacket[]>(getPasswordQuery, [id]);
+        
+        if (!passwordRows || passwordRows.length === 0) {
+            return false;
+        }
+        
+        const storedBcryptHash = passwordRows[0].password;
+        
+        // 입력 비밀번호를 동일한 방식으로 해싱: SHA2 먼저
+        const sha2Query = `SELECT ${this.algorithm}(?, ${this.method}) as sha2_hash`;
+        const [sha2Result] = await this.db.query<RowDataPacket[]>(sha2Query, [password]);
+        const sha2Hash = sha2Result[0].sha2_hash;
 
         try{
-            this.fastify.log.info(`실행 쿼리: ${this.db.format(query, [password, id])}`);
-            const [rows] = await this.db.query<RowDataPacket[]>(query, [password, id]);
-            return rows[0].isPasswordCorrect;
+            // bcrypt로 비교
+            const isPasswordCorrect = await bcrypt.compare(sha2Hash, storedBcryptHash);
+            return isPasswordCorrect;
         }catch(error){
-            this.fastify.logDbError('board', 'board', '게시판 삭제 전 비밀번호 확인 실패', error);
+            this.fastify.logDbError('board', 'board', '게시판 비밀번호 확인 실패', error);
             throw error;
         }
     }
