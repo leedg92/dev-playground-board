@@ -17,11 +17,11 @@ build/
 # ==========================================
 # 환경 변수 및 설정 파일
 # ==========================================
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# .env
+# .env.local
+# .env.development.local
+# .env.test.local
+# .env.production.local
 
 # ==========================================
 # 로그 파일
